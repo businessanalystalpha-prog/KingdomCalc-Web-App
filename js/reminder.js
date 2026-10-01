@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let reminderPickerInstance = null;
 
     // ==========================================
-    // MOBILE NOTIFICATION & BADGE HELPERS
+    // MOBILE & DESKTOP NOTIFICATION & BADGE HELPERS
     // ==========================================
     
     // I-update ang Red Badge Icon sa Mobile Home Screen
@@ -26,23 +26,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Magpakita ng Notification sa Phone Lock Screen / Dropdown Bar
+    // Magpakita ng Notification sa Phone Lock Screen / Status Bar / Desktop Center
     async function triggerSystemNotification(title, body) {
-        if (!("Notification" in window) || Notification.permission !== "granted") {
+        if (!("Notification" in window)) {
+            console.warn("Notifications not supported in this browser.");
             return;
         }
 
-        // Subukan gamitin ang Service Worker Registration para sa Mobile
+        // Hilingin ang permission kung hindi pa naagaw
+        if (Notification.permission !== "granted") {
+            const permission = await Notification.requestPermission();
+            if (permission !== "granted") return;
+        }
+
+        // 1. Subukang gamitin ang Service Worker Registration (Para sa Mobile Lock Screen / Background)
         if ('serviceWorker' in navigator) {
             try {
                 const reg = await navigator.serviceWorker.ready;
                 if (reg && reg.showNotification) {
                     await reg.showNotification(title, {
                         body: body,
-                        icon: "logo.svg",
-                        badge: "logo.svg",
+                        icon: "./logo.png",
+                        badge: "./logo.png",
                         vibrate: [200, 100, 200],
                         tag: "giving-reminder",
+                        renotify: true,
+                        requireInteraction: true, // Mananatili sa screen hangga't 'di iki-click ng user
                         data: { url: "./index.html" }
                     });
                     return;
@@ -52,11 +61,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Fallback sa standard Web Notification API
+        // 2. Fallback sa Standard Web Notification API (Desktop Browser)
         try {
             new Notification(title, {
                 body: body,
-                icon: "logo.svg"
+                icon: "./logo.png"
             });
         } catch (e) {
             console.error("Standard Notification failed:", e);
@@ -254,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
             saveReminderBtn.disabled = true;
             saveReminderBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
 
-            // Hilingin ang Mobile System Notification Permission
+            // Hilingin ang Mobile System & Desktop Notification Permission
             if (freqLower !== "none" && "Notification" in window && Notification.permission !== "granted") {
                 await Notification.requestPermission();
             }
@@ -351,7 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 1. I-set ang Red Badge sa Mobile App Icon
                 updateMobileAppBadge(1);
 
-                // 2. Magpakita ng System Mobile Notification
+                // 2. Magpakita ng System Notification sa Phone Status Bar at Desktop
                 await triggerSystemNotification(
                     "Tithes & Investments Reminder", 
                     saved.note || "It's time for your scheduled giving reminder!"
