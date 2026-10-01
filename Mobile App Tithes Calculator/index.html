@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KingdomCalc</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#005f56">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tithes & Investments">
+
+    <!-- Custom Favicon Support -->
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="apple-touch-icon" href="logo.svg">
+
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/screens.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Flatpickr Month Select Plugin CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <!-- intro.html check -->
+    <script>
+        // Step 1: Check kung pumasok na sa Intro
+        if (!sessionStorage.getItem("hasSeenIntro")) {
+            window.location.href = "intro.html";
+        } else {
+            // Step 2: Check kung Naka-lock at Unlocked na sa kasalukuyang session
+            const isLockEnabled = localStorage.getItem("kingdomCalcLockEnabled") === "true";
+            const hasPin = localStorage.getItem("kingdomCalcPin");
+            const isUnlocked = sessionStorage.getItem("isUnlocked") === "true";
+
+            if (isLockEnabled && hasPin && !isUnlocked) {
+                window.location.href = "login.html";
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="app-header" onclick="window.location.href='intro.html'" style="cursor: pointer;">
+        <img src="logo.svg" alt="Tithes Logo" class="app-header-logo">
+        
+        <div class="header-title-container">
+            <h1>KingdomCalc</h1>
+            <span class="brand-subtitle">by JK Corporation</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="app-container">
+
+        <!-- Dashboard Screen -->
+        <section id="dashboardScreen" class="screen active-screen">
+            <div class="dashboard-header">
+                <h2>Dashboard Overview</h2>
+                <p class="subtitle">Summary of Your Recorded Budget</p>
+            </div>
+
+            <!-- Dashboard Filters -->
+            <div class="dashboard-filters">
+                <!-- Custom Date Range Picker Input -->
+                <div class="date-picker-wrapper">
+                    <input type="text" id="dashDateFilter" placeholder="Select Date Range" readonly>
+                    <i class="fa-regular fa-calendar date-icon"></i>
+                </div>
+
+                <!-- Quick Date Shortcuts Dropdown -->
+                <div class="custom-select-wrapper" id="dashShortcutWrapper">
+                    <div class="custom-select-trigger">
+                        <i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px;"></i>
+                        <span id="dashShortcutLabel">YTD (Jan - Present)</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="custom-select-options">
+                        <div class="custom-option selected" data-value="ytd_now">YTD (Jan - Present)</div>
+                        <div class="custom-option" data-value="ytd">Full Year (Jan - Dec)</div>
+                        <div class="custom-option" data-value="this_month">This Month</div>
+                        <div class="custom-option" data-value="last_month">Last Month</div>
+                        <div class="custom-option" data-value="this_quarter">This Quarter</div>
+                        <div class="custom-option" data-value="all_time">All Time</div>
+                    </div>
+                    <input type="hidden" id="dashShortcutFilter" value="ytd_now">
+                </div>
+            </div>
+
+            <!-- Dashboard Summary Cards Grid -->
+            <div class="dashboard-grid">
+                <div class="dash-card tithes-card">
+                    <i class="fa-solid fa-hand-holding-dollar dash-card-icon"></i>
+                    <div class="dash-card-info">
+                        <span>Total Tithes</span>
+                        <h3 id="dashTotalTithes">₱ 0.00</h3>
+                    </div>
+                </div>
+
+                <div class="dash-card investments-card">
+                    <i class="fa-solid fa-box-open dash-card-icon"></i>
+                    <div class="dash-card-info">
+                        <span>Total Investments</span>
+                        <h3 id="dashTotalInvestments">₱ 0.00</h3>
+                    </div>
+                </div>
+
+                <div class="dash-card lovegifts-card">
+                    <i class="fa-solid fa-wallet dash-card-icon"></i>
+                    <div class="dash-card-info">
+                        <span>Total Expenses</span>
+                        <h3 id="dashTotalExpenses">₱ 0.00</h3>
+                    </div>
+                </div>
+
+                <button type="button" id="toggleNumberFormatBtn" class="dash-card format-toggle-card" title="Switch Number Format">
+                    <i class="fa-solid fa-arrow-rotate-left dash-card-icon"></i>
+                    <div class="dash-card-info">
+                        <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Number View</span>
+                        <h3 id="formatBtnLabel" style="color: var(--primary-color);">Compact</h3>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Pie Chart Card Section -->
+            <div class="distribution-card-wrapper">
+                <!-- Properly Closed Header -->
+                <div class="distribution-card-header">
+                    <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1;">
+                        <i class="fas fa-chart-pie text-success" id="chartViewIcon"></i>
+                        <h5 class="m-0 fw-bold card-title-text" id="distributionCardTitle">Distribution Percentage</h5>
+                    </div>
+                    
+                    <!-- Navigation & Export Controls -->
+                    <div class="chart-view-nav d-flex align-items-center gap-1">
+                        <!-- Export Excel Button -->
+                        <button type="button" class="btn btn-sm btn-outline-success me-1" id="dashExportExcelBtn" title="Export Distribution Data to Excel">
+                            <i class="fas fa-file-excel"></i>
+                        </button>
+
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="prevViewBtn" title="Previous View" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="badge bg-light text-dark mx-1" id="viewIndicator">1 / 2</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="nextViewBtn" title="Next View">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div> <!-- Correct Closing Tag for distribution-card-header -->
+
+                <!-- Card Body Content Container -->
+                <div class="card-body-content">
+                    <!-- View 1: Chart View -->
+                    <div id="chartViewContainer" class="view-panel active-view" style="position: relative; height: 260px;">
+                        <canvas id="givingPieChart"></canvas>
+                    </div>
+
+                    <!-- View 2: Table View (Hidden by Default) -->
+                    <div id="tableViewContainer" class="view-panel d-none" style="min-height: 260px;">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="sortable-header" data-sort="type" style="cursor: pointer;">
+                                            Type <i class="fas fa-sort text-muted ms-1"></i>
+                                        </th>
+                                        <th class="sortable-header" data-sort="label" style="cursor: pointer;">
+                                            Label <i class="fas fa-sort text-muted ms-1"></i>
+                                        </th>
+                                        <th class="sortable-header" data-sort="source" style="cursor: pointer;">
+                                            Source <i class="fas fa-sort text-muted ms-1"></i>
+                                        </th>
+                                        <th class="sortable-header" data-sort="date" style="cursor: pointer;">
+                                            Date <i class="fas fa-sort text-muted ms-1"></i>
+                                        </th>
+                                        <th class="sortable-header text-end" data-sort="amount" style="cursor: pointer;">
+                                            Amount <i class="fas fa-sort text-muted ms-1"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="distributionTableBody">
+                                    <!-- Dynamic Content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="quick-actions">
+                <button class="btn-primary" onclick="if(window.switchScreen) { window.switchScreen('calcScreen'); } else { document.querySelector('[data-target=\'calcScreen\']').click(); }">
+                    <i class="fa-solid fa-calculator"></i> Compute Now
+                </button>
+            </div>
+
+            <!-- Dashboard AI Insights Widget -->
+            <!-- <div id="aiInsightsCard" class="card shadow-sm p-4 mb-4" style="display: none;"> -->
+            <div class="ai-section-card">
+                <!-- Header -->
+                <div class="ai-header-container">
+                    <div class="ai-header-title">
+                        <i class="fa-solid fa-wand-magic-sparkles text-success"></i>
+                        <b>AI Giving Insights</b>
+                        <span class="badge bg-light text-secondary border">Premium</span>
+                    </div>
+                    <button id="btnResetAI" type="button" title="Reset View">
+                        <i class="fa-solid fa-rotate-right"></i> Reset
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="ai-card-body">
+                    <div id="aiOutput" class="ai-output-box">
+                        Click <b>Auto Generate Insights</b> for summary or type a prompt below to ask JoshBot AI.
+                    </div>
+
+                    <div class="ai-input-group">
+                        <input type="text" id="aiPromptInput" class="ai-prompt-input" placeholder="Ask JoshBot AI (e.g., Give me financial wisdom)...">
+                        <button id="btnSendPrompt" class="ai-send-btn" type="button">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+
+                    <button id="btnAutoInsights" class="ai-insights-btn" type="button">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto Generate Insights
+                    </button>
+                </div>
+                <!-- Disclaimer Note sa ilalim ng AI Card -->
+                <div style="text-align: center; font-size: 0.75rem; color: #6c757d; margin-top: 8px;">
+                    JoshBot AI can make mistakes. Verify important info.
+                </div>
+            </div>
+            <!-- Recent Activity List with Pagination -->
+            <div class="recent-activity-section">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Recorded Entries</h3>
+                <div id="dashRecentList" class="recent-list">
+                    <p style="text-align:center; color:#64748b; padding:15px;">Loading entries...</p>
+                </div>
+
+                <div id="dashPagination" class="dash-pagination" style="display: none;">
+                    <button id="dashPrevPageBtn" class="pagination-btn" disabled>
+                        <i class="fa-solid fa-chevron-left"></i> Prev
+                    </button>
+                    <span id="dashPageIndicator" class="page-indicator">Page 1 of 1</span>
+                    <button id="dashNextPageBtn" class="pagination-btn">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calculator Screen -->
+        <section id="calcScreen" class="screen">
+            <div class="card">
+                <div class="form-group">
+                    <label for="recordTitleInput">Computation Title / Label</label>
+                    <input type="text" id="recordTitleInput" placeholder="e.g., 1st Cutoff Salary, Mid-Year Bonus">
+                </div>
+
+                <div class="form-group">
+                    <label id="dateInputLabel" for="dateRangePicker">Select Date / Duration</label>
+                    <div class="date-picker-wrapper">
+                        <input type="text" id="dateRangePicker" placeholder="Select date..." readonly>
+                        <i class="fa-solid fa-calendar-days date-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>GIVING TYPE</label>
+                    <div class="custom-select-wrapper" id="givingTypeWrapper">
+                        <div class="custom-select-trigger">
+                            <span id="givingTypeLabel">-- Select Type --</span>
+                            <i class="fa-solid fa-chevron-down custom-select-arrow"></i>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option selected" data-value="">-- Select Type --</div>
+                            <div class="custom-option" data-value="Tithes">Tithes</div>
+                            <div class="custom-option" data-value="Investment">Investment</div>
+                            <div class="custom-option" data-value="Expenses">Expenses</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="givingType" value="">
+                </div>
+
+                <div id="entryBuilderSection" class="builder-box" style="display: none;">
+                    <div class="builder-header">
+                        <span id="builderTypeTitle">Add Items</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="itemDescriptionInput">Source / Description <span class="required-asterisk">*</span></label>
+                        <input type="text" id="itemDescriptionInput" placeholder="e.g., Basic Pay, Allowance, Food">
+                    </div>
+
+                    <div id="incomeGroup" class="form-group" style="display: none;">
+                        <label for="incomeInput">Income / Gross Amount</label>
+                        <input type="text" id="incomeInput" inputmode="decimal" placeholder="₱ 0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="amountLabel" for="itemAmountInput">Amount</label>
+                        <input type="text" id="itemAmountInput" inputmode="decimal" placeholder="₱ 0.00">
+                    </div>
+
+                    <button id="addItemToListBtn" class="secondary-btn" disabled>
+                        <i class="fa-solid fa-plus"></i> Add Item to List
+                    </button>
+                </div>
+
+                <div id="pendingListWrapper" class="pending-list-container" style="display: none;">
+                    <label>Itemized Breakdown</label>
+                    <div id="pendingItemsList" class="pending-items-list"></div>
+                </div>
+
+                <div class="summary-box">
+                    <!-- Example HTML Structure sa Calculate Screen Summary Box -->
+                    <div class="summary-row">
+                        <span>Tithes Total:</span>
+                        <div class="amount-container">
+                            <span class="currency-symbol">₱</span>
+                            <span id="titheTotalDisplay" class="amount-value">0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Investment Total:</span>
+                        <div class="amount-container">
+                            <span class="currency-symbol">₱</span>
+                            <span id="investmentTotalDisplay" class="amount-value">0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Expense Total:</span>
+                        <div class="amount-container">
+                            <span class="currency-symbol">₱</span>
+                            <span id="expenseTotalDisplay" class="amount-value">0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-row total-row">
+                        <strong>Overall Grand Total:</strong>
+                        <div class="amount-container">
+                            <span class="currency-symbol">₱</span>
+                            <span id="grandTotalDisplay" class="amount-value">0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="saveBtn" class="primary-btn" disabled><i class="fa-solid fa-floppy-disk"></i> Save Entry Record</button>
+            </div>
+        </section>
+
+        <!-- History Screen -->
+        <section id="historyScreen" class="screen">
+            <div class="card">
+                <div class="history-title-row">
+                    <h2>Giving History</h2>
+                </div>
+                
+                <div class="search-wrapper">
+                    <div class="search-input-container">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="historySearchInput" placeholder="Search by title, date, or item...">
+                        <button type="button" id="clearSearchBtn" class="clear-search-btn">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="export-dropdown-wrapper">
+                        <button type="button" id="exportMainBtn" class="export-main-btn" title="Export History">
+                            <i class="fa-solid fa-file-export"></i>
+                        </button>
+
+                        <div id="exportDropdownMenu" class="export-dropdown-menu">
+                            <button id="exportCsvBtn" class="export-dropdown-item">
+                                <i class="fa-solid fa-file-csv" style="color: #0284c7;"></i> Export CSV
+                            </button>
+                            <button id="exportExcelBtn" class="export-dropdown-item">
+                                <i class="fa-solid fa-file-excel" style="color: #16a34a;"></i> Export Excel
+                            </button>
+                            <button id="exportPdfBtn" class="export-dropdown-item">
+                                <i class="fa-solid fa-file-pdf" style="color: #dc2626;"></i> Export PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="historyList" class="history-list"></div>
+                <button id="clearHistoryBtn" class="danger-btn"><i class="fa-solid fa-trash"></i> Clear All History</button>
+            </div>
+        </section>
+
+        <!-- Reminders Screen -->
+        <section id="reminderScreen" class="screen">
+            <div class="card settings-card">
+                <h3><i class="fa-solid fa-bell"></i> Set Giving Reminder</h3>
+                
+                <div class="form-group">
+                    <label>REMINDER SCHEDULE</label>
+                    <div class="custom-select-wrapper" id="reminderScheduleWrapper">
+                        <div class="custom-select-trigger">
+                            <span id="reminderScheduleLabel">-- Select Schedule --</span>
+                            <i class="fa-solid fa-chevron-down custom-select-arrow"></i>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option selected" data-value="">-- Select Schedule --</div>
+                            <div class="custom-option" data-value="Weekly">Weekly (Every Sunday)</div>
+                            <div class="custom-option" data-value="Semi-Monthly">Semi-Monthly (15th & 30th)</div>
+                            <div class="custom-option" data-value="Monthly">Monthly (1st Day)</div>
+                            <div class="custom-option" data-value="Custom">Custom Date & Time</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="reminderSchedule" value="">
+                </div>
+
+                <div id="customReminderGroup" class="form-group" style="display: none; margin-top: 15px;">
+                    <label for="customReminderDateTime">Select Custom Date & Time</label>
+                    <input type="text" id="customReminderDateTime" class="form-control" placeholder="Select date & time...">
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="reminderNote">Reminder Note (Optional)</label>
+                    <input type="text" id="reminderNote" class="form-control" placeholder="e.g., Prepare monthly tithe & investment">
+                </div>
+
+                <button id="saveReminderBtn" class="primary-btn" style="margin-top: 15px;">
+                    <i class="fa-solid fa-bell"></i> Save Reminder
+                </button>
+            </div>
+
+            <div id="activeReminderCard" class="card" style="margin-top: 20px; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3><i class="fa-solid fa-clock"></i> Active Reminder</h3>
+                    <button id="deleteReminderBtn" class="danger-btn" style="width: auto; padding: 6px 12px; font-size: 0.85rem;">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </div>
+                
+                <div style="margin-top: 12px;">
+                    <h4 id="activeReminderTitle" style="color: #0f766e; margin-bottom: 5px; font-size: 1.1rem;"></h4>
+                </div>
+
+                <div id="activeReminderDetails" style="line-height: 1.6;"></div>
+            </div>
+        </section>
+
+        <!-- Settings Screen -->
+        <section id="settingsScreen" class="screen">
+            <div class="card">
+                <h2>Settings</h2>
+                <p class="subtitle">Configure your default calculation preferences.</p>
+                
+                <div class="form-group">
+                    <label for="settingTithePercent">Default Tithe Percentage (%)</label>
+                    <input type="number" id="settingTithePercent" inputmode="numeric" min="0" max="100" value="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="settingDateMode">Date Selection Format</label>
+                    <div class="custom-select-wrapper" id="settingDateModeWrapper">
+                        <div class="custom-select-trigger">
+                            <span id="settingDateModeLabel">Date Range / Duration</span>
+                            <i class="fa-solid fa-chevron-down custom-select-arrow"></i>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option selected" data-value="range">
+                                Date Range / Duration
+                            </div>
+                            <div class="custom-option" data-value="monthly">
+                                Monthly
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="settingDateMode" value="range">
+                </div>
+
+                <button id="saveSettingsBtn" class="primary-btn"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Global Modal -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <i id="modalIcon" class="fa-solid fa-circle-info"></i>
+                <h3 id="modalTitle">Notification</h3>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Message content goes here.</p>
+            </div>
+            <div class="modal-actions">
+                <button id="modalCancelBtn" class="secondary-btn" style="display: none;">Cancel</button>
+                <button id="modalConfirmBtn" class="primary-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-target="dashboardScreen">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-target="calcScreen">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Calculate</span>
+        </button>
+        <button class="nav-item" data-target="historyScreen">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>History</span>
+        </button>
+        <button class="nav-item" data-target="reminderScreen">
+            <i class="fa-solid fa-bell"></i>
+            <span>Reminders</span>
+        </button>
+        <button class="nav-item" data-target="settingsScreen">
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
+
+    <!-- Flatpickr JS & Month Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- JS Application Scripts -->
+    <script src="js/modal.js"></script>
+    <script src="js/calc.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/reminder.js"></script>
+    <script src="js/dashboard_charts.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/intro.js"></script>
+    <!-- AI Modules -->
+    <script type="module" src="premium/ai_service.js"></script>
+    <script type="module" src="premium/ai_dashboard.js"></script>
+    <!--
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+    </script>
+    -->
+</body>
+</html>

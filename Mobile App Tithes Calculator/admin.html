@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KingdomCalc - Admin Settings</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #0d2818;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .admin-card {
+            background: #16382b;
+            border: 1px solid #2d5a46;
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .admin-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #2d5a46;
+            padding-bottom: 15px;
+        }
+        .admin-header i {
+            font-size: 1.8rem;
+            color: #00d284;
+        }
+        .admin-header h2 {
+            font-size: 1.4rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #b0c4de;
+            margin-bottom: 8px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #2d5a46;
+            background: #0d2818;
+            color: #ffffff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: #00d284;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .badge-live { background: #15803d; color: #fff; }
+        .badge-test { background: #b45309; color: #fff; }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: #00d284; color: #0d2818; }
+        .btn-secondary { background: #334155; color: #fff; }
+        .btn-reset { background: #dc2626; color: #fff; }
+        
+        .alert-msg {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: none;
+            text-align: center;
+        }
+        .alert-success { background: #14532d; color: #86efac; }
+        .alert-error { background: #7f1d1d; color: #fca5a5; display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN / PASSWORD MODAL CARD -->
+    <div class="admin-card" id="loginCard">
+        <div class="admin-header">
+            <i class="fa-solid fa-lock"></i>
+            <div>
+                <h2>Admin Verification</h2>
+                <p style="font-size: 0.8rem; color: #94a3b8;">Enter admin password to proceed</p>
+            </div>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="adminPassInput"><i class="fa-solid fa-key"></i> Password</label>
+                <input type="password" id="adminPassInput" placeholder="Enter password..." required autofocus>
+            </div>
+
+            <div id="loginAlert" class="alert-msg"></div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Unlock</button>
+                <button type="button" id="cancelBtn" class="btn btn-secondary"><i class="fa-solid fa-xmark"></i> Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. ADMIN MAIN CONSOLE CARD (Hidden initially) -->
+    <div class="admin-card" id="adminConsoleCard" style="display: none;">
+        <div class="admin-header">
+            <i class="fa-solid fa-user-shield"></i>
+            <div>
+                <h2>Admin Console</h2>
+                <span id="environmentBadge" class="status-badge badge-live">Live Mode</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="scriptUrlInput"><i class="fa-solid fa-link"></i> Google Apps Script URL</label>
+            <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+
+        <div id="alertMsg" class="alert-msg"></div>
+
+        <div class="btn-group">
+            <button id="saveUrlBtn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save URL</button>
+            <button id="resetUrlBtn" class="btn btn-reset" title="Reset to Live Default"><i class="fa-solid fa-rotate-left"></i> Reset Live</button>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <button id="backToIntroBtn" class="btn btn-secondary" style="width: 100%;"><i class="fa-solid fa-arrow-left"></i> Back to Intro</button>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = "121320";
+        const DEFAULT_URL = "https://script.google.com/macros/s/AKfycbyI0U3ab1YeGAdhk_GoiL6weKCauUXfa4xMK_D63tUr9yIaGLTtpe7In4GEbxkASUAb5g/exec";
+
+        const loginCard = document.getElementById("loginCard");
+        const adminConsoleCard = document.getElementById("adminConsoleCard");
+        const loginForm = document.getElementById("loginForm");
+        const adminPassInput = document.getElementById("adminPassInput");
+        const loginAlert = document.getElementById("loginAlert");
+
+        const scriptUrlInput = document.getElementById("scriptUrlInput");
+        const environmentBadge = document.getElementById("environmentBadge");
+        const alertMsg = document.getElementById("alertMsg");
+
+        // --- PASSWORD CHECK LOGIC ---
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const enteredPass = adminPassInput.value.trim();
+
+            if (enteredPass === ADMIN_PASSWORD) {
+                loginCard.style.display = "none";
+                adminConsoleCard.style.display = "block";
+                loadCurrentConfig();
+            } else {
+                loginAlert.textContent = "Incorrect Password! Please try again.";
+                loginAlert.className = "alert-msg alert-error";
+                adminPassInput.value = "";
+                adminPassInput.focus();
+            }
+        });
+
+        document.getElementById("cancelBtn").addEventListener("click", () => {
+            window.location.href = "intro.html";
+        });
+
+        // --- CONSOLE CONFIG LOGIC ---
+        function loadCurrentConfig() {
+            const savedUrl = localStorage.getItem("customScriptUrl");
+            if (savedUrl && savedUrl !== DEFAULT_URL) {
+                scriptUrlInput.value = savedUrl;
+                environmentBadge.textContent = "Testing / Staging Mode";
+                environmentBadge.className = "status-badge badge-test";
+            } else {
+                scriptUrlInput.value = DEFAULT_URL;
+                environmentBadge.textContent = "Live Production Mode";
+                environmentBadge.className = "status-badge badge-live";
+            }
+        }
+
+        function showAlert(msg) {
+            alertMsg.textContent = msg;
+            alertMsg.className = "alert-msg alert-success";
+            alertMsg.style.display = "block";
+            setTimeout(() => { alertMsg.style.display = "none"; }, 3000);
+        }
+
+        document.getElementById("saveUrlBtn").addEventListener("click", () => {
+            const newUrl = scriptUrlInput.value.trim();
+            if (!newUrl) return;
+
+            localStorage.setItem("customScriptUrl", newUrl);
+            showAlert("Script URL updated successfully!");
+            loadCurrentConfig();
+        });
+
+        document.getElementById("resetUrlBtn").addEventListener("click", () => {
+            localStorage.removeItem("customScriptUrl");
+            showAlert("Reset to Live Default URL!");
+            loadCurrentConfig();
+        });
+
+        document.getElementById("backToIntroBtn").addEventListener("click", () => {
+            window.location.href = "intro.html";
+        });
+    </script>
+</body>
+</html>
