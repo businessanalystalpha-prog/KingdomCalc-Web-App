@@ -1,0 +1,130 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+    background-color: #0d2818;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+body, .login-container {
+    background-color: #0b221e; /* Mas madilim na teal/green matching sa intro */
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-container {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-card {
+    background: #0b221e;
+    border: 1px solid #0b221e;
+    border-radius: 20px;
+    padding: 35px 25px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.login-logo {
+    width: 55px;
+    height: 55px;
+    margin-bottom: 8px;
+}
+
+.brand-header h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: #ffffff;
+}
+
+.brand-subtitle {
+    font-size: 0.75rem;
+    color: #00d284;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.lock-icon-wrapper {
+    margin-bottom: 15px;
+}
+
+.lock-icon {
+    font-size: 2.2rem;
+    color: #00d284;
+}
+
+.login-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 6px;
+}
+
+.login-card p {
+    font-size: 0.85rem;
+    color: #a3b899;
+    margin-bottom: 25px;
+}
+
+.pin-input-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.pin-digit {
+    width: 50px;
+    height: 55px;
+    font-size: 1.6rem;
+    text-align: center;
+    border-radius: 10px;
+    border: 1.5px solid #2d5a46;
+    background: #0d2818;
+    color: #00d284;
+    font-weight: bold;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.pin-digit:focus {
+    border-color: #00d284;
+    box-shadow: 0 0 8px rgba(0, 210, 132, 0.4);
+}
+
+.error-message {
+    color: #f87171;
+    font-size: 0.85rem;
+    min-height: 22px;
+    margin-bottom: 15px;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #00d284;
+    color: #0d2818;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-login:hover {
+    background: #00b874;
+}

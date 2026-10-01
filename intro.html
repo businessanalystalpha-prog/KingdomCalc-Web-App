@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to KingdomCalc</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/intro.css">
+</head>
+<body>
+
+    <div class="intro-container">
+        <!-- Wrapper para sa version tag at card -->
+        <div class="intro-card-wrapper">
+            
+            <!-- 1. Version tag sa TAAS ng card -->
+            <div class="top-version-tag" id="versionTag">v1.0.2</div>
+
+            <!-- 2. Ang Mismong Card Box -->
+            <div class="intro-card">
+                <div class="intro-logo-wrapper">
+                    <img src="logo.svg" alt="KingdomCalc Logo" class="intro-logo">
+                </div>
+                
+                <h1 class="intro-title">KingdomCalc</h1>
+                <p class="intro-subtitle">by JK Corporation</p>
+                
+                <p class="intro-description">
+                    Easily manage, calculate, and track your Tithes, Investments, and Expenses in one place.
+                </p>
+                
+                <button id="getStartedBtn" class="intro-btn">
+                    Get Started <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("getStartedBtn").addEventListener("click", function() {
+            sessionStorage.setItem("hasSeenIntro", "true");
+            window.location.href = "login.html"; // Papuntang Login Screen
+        });
+
+        // --- 5-CLICK ADMIN ACCESS LOGIC ---
+        let versionClickCount = 0;
+        let clickTimer = null;
+
+        document.getElementById("versionTag").addEventListener("click", function() {
+            versionClickCount++;
+
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                versionClickCount = 0;
+            }, 2500);
+
+            if (versionClickCount === 5) {
+                versionClickCount = 0;
+                window.location.href = "admin.html"; // Papuntang Admin Page
+            }
+        });
+    </script>
+
+    <div class="ocean">
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+</body>
+</html>
